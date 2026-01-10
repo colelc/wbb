@@ -1,9 +1,9 @@
 import os
-import itertools
 from src.config.config import Config
 from src.logging.app_logger import AppLogger
 from src.service.scraper import Scraper
-from src.service.word_lookup import WordLookup
+from src.service.boxscore_service import BoxscoreService
+
 
 class App(object):
 
@@ -13,7 +13,17 @@ class App(object):
         logger = AppLogger.set_up_logger("app.log")
         config = Config.set_up_config(".env")
 
-        data = Scraper(config).scrape()
+        #games = Scraper(config).scrape()
+        Scraper(config).scrape()
+
+        # build the W-L data
+        BoxscoreService(config).collect_boxscore_data()
+         
+
+        #for k,v in games.items():
+        #    logger.info(k + " -> " + str(v))
+
+
 
         # word_config = {
         #     "word_file_path" : os.path.join(config.get("input.data.dir"), config.get("word.file")),
@@ -23,13 +33,7 @@ class App(object):
         #     "max_word_length": int(config.get("max.word.length")) or 9
         # }
 
-        # for k,v in word_config.items():
-        #     logger.info(k + " -> " + str(v))
 
-        # answers = WordLookup(word_config).search()
-        # for pair, answer_list in answers.items():
-        #     for answer in answer_list:
-        #         logger.info(pair + " -> " + answer)
 
 
 

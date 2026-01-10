@@ -27,3 +27,19 @@ class FileService(object):
     def write_file(filename:str, obj):
         with open(filename, "w", encoding="utf-8") as f:
             f.write(str(obj))
+
+    @staticmethod
+    def delete_file(filename:str):
+        if os.path.exists(filename):
+            os.remove(filename)
+
+    @staticmethod
+    def read_file(filename: str):
+        games_list = []
+        with open(filename, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line:  # Skip empty lines
+                    games_list.append(json.loads(line))
+                    
+        return games_list

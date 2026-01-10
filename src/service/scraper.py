@@ -14,6 +14,8 @@ class Scraper(object):
         self.output_dir = config.get("output.data.dir")
         self.scrape_file = config.get("scrape.file")
         self.scrape_boxscore_file = config.get("scrape.boxscore.file")
+        metadata_file = config.get("metadata.file")
+        self.metadata_file_path = os.path.join(self.output_dir, metadata_file)
 
         scrape_path = os.path.join(self.output_dir, "scrape")
         os.makedirs(scrape_path, exist_ok=True)
@@ -23,6 +25,15 @@ class Scraper(object):
         self.config = config
 
     def scrape(self):
+        do_scrape = self.config.get("do.scrape")
+        if not do_scrape or do_scrape.strip().lower() != "y":
+            self.logger.info("not scraping")
+            return
+        
+        FileService.delete_file(self.metadata_file_path)
+        
+        games = dict()
+
         for season in self.seasons:
             url = self.espn_url + self.season_results_url + str(season)
             self.logger.info(url)
@@ -41,12 +52,31 @@ class Scraper(object):
                 game_date = self.extract_date(game_date_soup.get_text())
 
                 # collect the boxscore url page
-                boxscore_url = self.to_boxscore_url(url)
+                gameId, boxscore_url = self.to_boxscore_url(url)
                 boxscore_soup = RequestUtils(boxscore_url, False).get_data()
                 boxscore_scrape_file_path = os.path.join(self.output_dir, "scrape", str(season), self.scrape_boxscore_file.replace("YYYYMMDD", str(game_date)))
-                FileService.write_file(boxscore_scrape_file_path, boxscore_soup)
+                if not FileService.file_exists(boxscore_scrape_file_path):
+                    FileService.write_file(boxscore_scrape_file_path, boxscore_soup)
+
+                # games[game_date] = {
+                #     "season": season,
+                #     "game_date": game_date,
+                #     "gameId": gameId,
+                #     "boxscore_file": boxscore_scrape_file_path,
+                #     "boxscore_url": boxscore_url
+                # }
+
+                FileService.append(self.metadata_file_path, {
+                    "season": season,
+                    "game_date": game_date,
+                    "gameId": gameId,
+                    "boxscore_file": boxscore_scrape_file_path,
+                    "boxscore_url": boxscore_url
+                }
+)
                 
-        return {}
+        #return games
+        return
     
     def to_boxscore_url(self, url):
         match = re.search(r'gameId/(\d+)', url)
@@ -54,7 +84,7 @@ class Scraper(object):
             return None
         
         game_id = match.group(1)
-        return self.espn_url + "boxscore/_/gameId/" + str(game_id)
+        return game_id, self.espn_url + "boxscore/_/gameId/" + str(game_id)
     
     def extract_date(self, title_text):
         # Find the date inside parentheses, example: Mar 4, 2020
