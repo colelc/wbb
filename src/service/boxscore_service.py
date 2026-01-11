@@ -10,11 +10,10 @@ from src.service.file_service import FileService
 class BoxscoreService(object):
     def __init__(self, config):
         self.logger = AppLogger.get_logger()
+        self.config = config
         self.output_dir = config.get("output.data.dir")
         metadata_file = config.get("metadata.file")
-        self.logger.info(str(metadata_file))
         self.metadata_file_path = os.path.join(self.output_dir, metadata_file)
-        self.logger.info(str(self.metadata_file_path))
         self.seasons = [season.strip() for season in config.get("seasons").split(",")]
 
         self.boxscore_data_file = config.get("boxscore.data.file")
@@ -22,7 +21,11 @@ class BoxscoreService(object):
         os.makedirs(self.boxscore_data_path, exist_ok=True)
 
     def collect_boxscore_data(self):
-        self.logger.info(str(self.metadata_file_path))
+        do_boxscore = self.config.get("do.boxscore")
+        if not do_boxscore or do_boxscore.strip().lower() != "y":
+            self.logger.info("not re-generating box score files")
+            return
+        
         games_list = FileService.read_file(self.metadata_file_path)
         for game in games_list:
             boxscore_file = game["boxscore_file"]
