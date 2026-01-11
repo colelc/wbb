@@ -35,11 +35,12 @@ class BoxscoreService(object):
                 self.logger.error("no team totals, returning")
                 break
 
-            
-            homeTeam = teams_dict["homeTeam"]
-            awayTeam = teams_dict["awayTeam"]
-            homeTeamId = teams_dict["homeTeamId"]
-            awayTeamId = teams_dict["awayTeamId"]
+            #self.logger.info(str(teams_dict))
+            #self.logger.info(str(team_totals))
+            homeTeam = teams_dict["homeTeam"].strip()
+            awayTeam = teams_dict["awayTeam"].strip()
+            homeTeamId = teams_dict["homeTeamId"].strip()
+            awayTeamId = teams_dict["awayTeamId"].strip()
 
             game["homeTeamId"] = homeTeamId
             game["awayTeamId"] = awayTeamId
@@ -48,10 +49,10 @@ class BoxscoreService(object):
                 if t["team"] == homeTeam:
                     game["homeTeam"] = t
                 elif t["team"] == awayTeam:
-                    game["away_team"] = t
+                    game["awayTeam"] = t
 
-            # for k,v in game.items():
-            #     self.logger.info(k + " -> " + str(v))
+            #for k,v in game.items():
+            #    self.logger.info(k + " -> " + str(v))
 
             season = game["season"]
             boxscore_data_file_path = os.path.join(self.boxscore_data_path, self.boxscore_data_file.replace("YYYY", str(season)))
@@ -62,14 +63,6 @@ class BoxscoreService(object):
             soup = BeautifulSoup(file, "html.parser")
             #self.logger.info(str(soup))
 
-            # extract home/away team
-            # homeTeam, awayTeam = self.extract_home_away(soup)
-            #         return {
-            #             "homeTeam": homeTeam,
-            #             "awayTeam": awayTeam,
-            #             "homeTeamId": homeTeamId,
-            #             "awayTeamId": awayTeamId
-            #         }
             teams_dict = self.extract_home_away(soup)
             if teams_dict is None:
                 self.logger.error("No teams_dict")
@@ -81,13 +74,13 @@ class BoxscoreService(object):
             results = []
             for team in teams:
                 team_totals = self.extract_team_totals(team)
+                #self.logger.info(str(team_totals))
                 if team_totals is None:
                     self.logger.info(team + ": no totals")
                     return None, None
                 else:
                     results.append(team_totals)
 
-            #return homeTeam, awayTeam, results
             return teams_dict, results
         
         
@@ -110,10 +103,13 @@ class BoxscoreService(object):
                     homeTeam = (home_tokens[0].split(":"))[1]
                     #self.logger.info(homeTeam)
 
-                    #self.logger.info("home: " + str(home))
+                    #self.logger.info(str(home))
                     home = home.replace("prsdTms:home:", "")
+                    home = home.replace("prsdTms:  ", "")
                     home_tokens = [t.strip() for t in home.split(",")]
+                    #self.logger.info(str(home_tokens))
                     homeTeamId = (home_tokens[0].split(":"))[1]
+                    #self.logger.info(str(homeTeamId))
 
                     #self.logger.info(prsdTms)
                     position = prsdTms.find("away")
@@ -144,22 +140,28 @@ class BoxscoreService(object):
 
     def extract_team_totals(self, team_block):
         team_name = team_block.select_one(".BoxscoreItem__TeamName").get_text(strip=True)
+        #self.logger.info(team_name)
         
         scroller = team_block.select_one("div.Table__Scroller table")
         if not scroller:
+            self.logger.info("no scroller")
             return None
         
         all_rows = scroller.select("tbody tr")
         if len(all_rows) < 10:  # Basic sanity check
+            self.logger.info("not at least 10 rows")
             return None
         
         # Team totals are 2nd-to-last row (index -2)
         totals_row = all_rows[-2]
         cells = [td.get_text(strip=True) for td in totals_row.select("td")]
+
+        #self.logger.info(str(cells))
         
         # Just verify it has the expected structure (empty first cell, PTS in second)
         if len(cells) >= 13 and not cells[0] and cells[1] and cells[1].isdigit():
             stats = cells[1:]
+            #self.logger.info(str(stats))
             return_stats = dict()
             return_stats["team"] = team_name
             
@@ -192,7 +194,11 @@ class BoxscoreService(object):
             return_stats["DREB"] = int(stats[10])
             return_stats["PF"] = int(stats[11])
 
+            #self.logger.info(str(return_stats))
+
             return return_stats
+        else:
+            self.logger.info("no data")
         
         return None
 

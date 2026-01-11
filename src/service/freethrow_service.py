@@ -11,6 +11,7 @@ class FreethrowService(object):
         self.output_dir = config.get("output.data.dir")
         self.boxscore_data_file = config.get("boxscore.data.file")
         self.boxscore_data_path = os.path.join(self.output_dir, "boxscore")
+        self.team_id = config.get("team.id")
 
         self.config = config
 
@@ -18,7 +19,9 @@ class FreethrowService(object):
         # collect the boxscore data
         boxscore_list = FileService.read_all_files_in_directory(self.boxscore_data_path)
 
-        #filtered_boxscore_list = self.filter_by_losses_or_wins(win_or_loss, 5, boxscore_list)
+        filtered_boxscore_list = self.filter_by_losses_or_wins(win_or_loss, 5, boxscore_list)
+        for bs in filtered_boxscore_list:
+            self.logger.info(str(bs))
 
 
     def filter_by_losses_or_wins(self, win_or_loss, point_diff, boxscore_list):
@@ -30,6 +33,18 @@ class FreethrowService(object):
 
             home_score = boxscore["homeTeam"]["PTS"]
             away_score = boxscore["awayTeam"]["PTS"]
+            homeTeamId = boxscore["homeTeamId"]
+            awayTeamId = boxscore["awayTeamId"]
+
+            if abs(home_score - away_score) > point_diff:
+                continue
+
+            if self.team_id == homeTeamId:
+                if win_or_loss == "L" and home_score < away_score:
+                    filtered.append(boxscore)
+            elif self.team_id == awayTeamId:
+                if win_or_loss == "L" and away_score < home_score:
+                    filtered.append(boxscore)
 
         return filtered
     
