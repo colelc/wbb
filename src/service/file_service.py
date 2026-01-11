@@ -1,4 +1,5 @@
 import os
+import stat
 import csv
 import json
 import shutil
@@ -29,10 +30,30 @@ class FileService(object):
         with open(filename, "w", encoding="utf-8") as f:
             f.write(str(obj))
 
+    # @staticmethod
+    # def delete_file(filename:str):
+    #     print("deleting file: " + str(filename))
+    #     if os.path.exists(filename):
+    #         deleted = os.remove(filename)
+    #         print("deleted: " + str(deleted))
+
     @staticmethod
-    def delete_file(filename:str):
+    def delete_file(filename):
         if os.path.exists(filename):
-            os.remove(filename)
+            try:
+                # Clear read-only flag (Windows)
+                os.chmod(filename, stat.S_IWRITE)
+                os.remove(filename)
+                #print(f"Deleted {filename}")
+            except PermissionError:
+                print(f"Permission denied: {filename}")
+            except Exception as e:
+                print(f"Error deleting {filename}: {e}")
+            # else:
+            #     print(f"Still exists: {filename}")
+        #else:
+        #    print(filename + " does not exist")
+
 
     @staticmethod
     def read_file(filename: str):
@@ -59,9 +80,8 @@ class FileService(object):
     @staticmethod
     def delete_all_files_in_directory(directory: str):
         log = AppLogger.get_logger()
-        log.info("Deleting files from: " + str(directory))
-        data_list = list()
+
         files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
         for f in files:
-            log.info("Deleting: " + str(f))
-            FileService.delete_file(f)  
+            full_path = os.path.join(directory, f)
+            FileService.delete_file(full_path)  
