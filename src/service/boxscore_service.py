@@ -1,4 +1,5 @@
 import os
+import sys
 from bs4 import BeautifulSoup
 from src.logging.app_logger import AppLogger
 from src.service.file_service import FileService
@@ -11,6 +12,7 @@ class BoxscoreService(object):
         metadata_file = config.get("metadata.file")
         self.metadata_file_path = os.path.join(self.output_dir, metadata_file)
         self.seasons = [season.strip() for season in config.get("seasons").split(",")]
+        self.team_id = config.get("team.id")
 
         self.boxscore_data_file = config.get("boxscore.data.file")
         self.boxscore_data_path = os.path.join(self.output_dir, "boxscore")
@@ -27,10 +29,20 @@ class BoxscoreService(object):
         games_list = FileService.read_file(self.metadata_file_path)
         for game in games_list:
             boxscore_file = game["boxscore_file"]
-            homeTeam, awayTeam, team_totals = self.process_boxscore_file(boxscore_file)
-            if team_totals is None:
+           
+            teams_dict, team_totals = self.process_boxscore_file(boxscore_file)
+            if team_totals is None or teams_dict is None:
                 self.logger.error("no team totals, returning")
                 break
+
+            
+            homeTeam = teams_dict["homeTeam"]
+            awayTeam = teams_dict["awayTeam"]
+            homeTeamId = teams_dict["homeTeamId"]
+            awayTeamId = teams_dict["awayTeamId"]
+
+            game["homeTeamId"] = homeTeamId
+            game["awayTeamId"] = awayTeamId
 
             for t in team_totals:
                 if t["team"] == homeTeam:
@@ -51,27 +63,37 @@ class BoxscoreService(object):
             #self.logger.info(str(soup))
 
             # extract home/away team
-            homeTeam, awayTeam = self.extract_home_away(soup)
+            # homeTeam, awayTeam = self.extract_home_away(soup)
+            #         return {
+            #             "homeTeam": homeTeam,
+            #             "awayTeam": awayTeam,
+            #             "homeTeamId": homeTeamId,
+            #             "awayTeamId": awayTeamId
+            #         }
+            teams_dict = self.extract_home_away(soup)
+            if teams_dict is None:
+                self.logger.error("No teams_dict")
+                return None, None
 
             # extract team stats
             teams = soup.select("div.Boxscore.flex.flex-column:has(.Boxscore__Title)")
 
             results = []
             for team in teams:
-                #results.append(self.extract_team_totals(team))
                 team_totals = self.extract_team_totals(team)
                 if team_totals is None:
                     self.logger.info(team + ": no totals")
-                    return None
+                    return None, None
                 else:
-                    #self.logger.info(str(team_totals))
                     results.append(team_totals)
-                    #return team_totals
 
-            return homeTeam, awayTeam, results
+            #return homeTeam, awayTeam, results
+            return teams_dict, results
+        
         
     def extract_home_away(self, soup):
         homeTeam, awayTeam = None, None
+        homeTeamId, awayTeamId = None, None
         for script in soup.find_all("script"):
             text = script.get_text(strip=True)
             if 'prsdTms' in text:
@@ -79,32 +101,44 @@ class BoxscoreService(object):
                     position = text.find("prsdTms")
                     if position == -1:
                         self.logger.error("cannot locate prsdTms")
-                        return None, None
+                        return None
                     
                     prsdTms = text[position:position + 2000]
 
                     home = prsdTms[0:200].replace('"', "").replace("{ home: ", "").replace("{", "").replace("}", "") #.replace(" ", "")
-                    # home_tokens = [t.strip() for t in home.split(",") if "UNC" in t]
                     home_tokens = [t.strip() for t in home.split(",") if "displayName" in t]
                     homeTeam = (home_tokens[0].split(":"))[1]
                     #self.logger.info(homeTeam)
+
+                    #self.logger.info("home: " + str(home))
+                    home = home.replace("prsdTms:home:", "")
+                    home_tokens = [t.strip() for t in home.split(",")]
+                    homeTeamId = (home_tokens[0].split(":"))[1]
 
                     #self.logger.info(prsdTms)
                     position = prsdTms.find("away")
                     if position == -1:
                         self.logger.error("cannot locate away")
-                        return None, None
+                        return None
                     
                     away = prsdTms[position:position + 2000].replace('"', "").replace("{ away: ", "").replace("{", "").replace("}", "")
                     away_tokens = [t.strip() for t in away.split(",") if "displayName" in t]
                     awayTeam = (away_tokens[0].split(":"))[1]
-                    #self.logger.info(awayTeam)
+                    
+                    away = away.replace("away:", "")
+                    away_tokens = [t.strip() for t in away.split(",")]
+                    awayTeamId = (away_tokens[0].split(":"))[1]
 
-                    return homeTeam, awayTeam
+                    return {
+                        "homeTeam": homeTeam,
+                        "awayTeam": awayTeam,
+                        "homeTeamId": homeTeamId,
+                        "awayTeamId": awayTeamId
+                    }
                 except Exception as e:
                     self.logger.error(f"JSON extraction failed: {e}")
                     
-        return None, None
+        return None
 
 
 
