@@ -3,12 +3,15 @@ from src.config.config import Config
 from src.logging.app_logger import AppLogger
 from src.service.scraper import Scraper
 from src.service.boxscore_service import BoxscoreService
+from src.service.file_service import FileService
 
 
 class App(object):
 
     @classmethod
     def go(cls):
+
+        FileService.delete_file("app.log")
 
         logger = AppLogger.set_up_logger("app.log")
         config = Config.set_up_config(".env")

@@ -17,21 +17,29 @@ class BoxscoreService(object):
         self.logger.info(str(self.metadata_file_path))
         self.seasons = [season.strip() for season in config.get("seasons").split(",")]
 
+        self.boxscore_data_file = config.get("boxscore.data.file")
+        self.boxscore_data_path = os.path.join(self.output_dir, "boxscore")
+        os.makedirs(self.boxscore_data_path, exist_ok=True)
+
     def collect_boxscore_data(self):
         self.logger.info(str(self.metadata_file_path))
         games_list = FileService.read_file(self.metadata_file_path)
         for game in games_list:
-            #self.logger.info(str(game))
             boxscore_file = game["boxscore_file"]
-            team_totals = self.process_boxscore_file(boxscore_file)
+            homeTeam, awayTeam, team_totals = self.process_boxscore_file(boxscore_file)
             if team_totals is None:
                 self.logger.error("no team totals, returning")
                 break
 
-            #self.logger.info(str(team_totals))
+            game["home_team"] = homeTeam
+            game["away_team"] = awayTeam
             game["team_totals"] = team_totals
 
             #self.logger.info(str(game))
+
+            season = game["season"]
+            boxscore_data_file_path = os.path.join(self.boxscore_data_path, self.boxscore_data_file.replace("YYYY", str(season)))
+            FileService.append(boxscore_data_file_path, game)
 
     def process_boxscore_file(self, boxscore_file:str):
         with open(boxscore_file, "r", encoding="utf8") as file:
@@ -39,7 +47,7 @@ class BoxscoreService(object):
             #self.logger.info(str(soup))
 
             # extract home/away team
-            home_away = self.extract_home_away(soup)
+            homeTeam, awayTeam = self.extract_home_away(soup)
 
             # extract team stats
             teams = soup.select("div.Boxscore.flex.flex-column:has(.Boxscore__Title)")
@@ -56,30 +64,45 @@ class BoxscoreService(object):
                     results.append(team_totals)
                     #return team_totals
 
-            return results
+            return homeTeam, awayTeam, results
         
     def extract_home_away(self, soup):
-        # get the last <script> tag
-        last_script = soup.find_all("script")[-1]
+        homeTeam, awayTeam = None, None
+        for script in soup.find_all("script"):
+            text = script.get_text(strip=True)
+            if 'prsdTms' in text:
+                try:
+                    position = text.find("prsdTms")
+                    if position == -1:
+                        self.logger.error("cannot locate prsdTms")
+                        return None, None
+                    
+                    prsdTms = text[position:position + 2000]
 
-        # get the JS text
-        script_text = last_script.string or last_script.get_text()
+                    home = prsdTms[0:200].replace('"', "").replace("{ home: ", "").replace("{", "").replace("}", "") #.replace(" ", "")
+                    # home_tokens = [t.strip() for t in home.split(",") if "UNC" in t]
+                    home_tokens = [t.strip() for t in home.split(",") if "displayName" in t]
+                    homeTeam = (home_tokens[0].split(":"))[1]
+                    #self.logger.info(homeTeam)
 
-        # remove the JS assignment prefix
-        prefix = "window['__CONFIG__']="
-        if script_text.startswith(prefix):
-            json_str = script_text[len(prefix):]
-        else:
-            # fallback: split on '=' once
-            json_str = script_text.split('=', 1)[-1]
+                    #self.logger.info(prsdTms)
+                    position = prsdTms.find("away")
+                    if position == -1:
+                        self.logger.error("cannot locate away")
+                        return None, None
+                    
+                    away = prsdTms[position:position + 2000].replace('"', "").replace("{ away: ", "").replace("{", "").replace("}", "")
+                    away_tokens = [t.strip() for t in away.split(",") if "displayName" in t]
+                    awayTeam = (away_tokens[0].split(":"))[1]
+                    #self.logger.info(awayTeam)
 
-        # parse JSON and extract mode
-        config = json.loads(json_str)
-        #mode_value = config["mode"]
-        info = config["prsdTms"]
+                    return homeTeam, awayTeam
+                except Exception as e:
+                    self.logger.error(f"JSON extraction failed: {e}")
+                    
+        return None, None
 
-        print(info)  # "universal"
-        return info
+
 
     def extract_team_totals(self, team_block):
         team_name = team_block.select_one(".BoxscoreItem__TeamName").get_text(strip=True)
