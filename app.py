@@ -3,6 +3,7 @@ from src.config.config import Config
 from src.logging.app_logger import AppLogger
 from src.service.scraper import Scraper
 from src.service.boxscore_service import BoxscoreService
+from src.service.freethrow_service import FreethrowService
 from src.service.file_service import FileService
 
 
@@ -16,26 +17,13 @@ class App(object):
         logger = AppLogger.set_up_logger("app.log")
         config = Config.set_up_config(".env")
 
-        #games = Scraper(config).scrape()
         Scraper(config).scrape()
 
-        # build the W-L data
+        # build the boxscore data
         BoxscoreService(config).collect_boxscore_data()
          
-
-        #for k,v in games.items():
-        #    logger.info(k + " -> " + str(v))
-
-
-
-        # word_config = {
-        #     "word_file_path" : os.path.join(config.get("input.data.dir"), config.get("word.file")),
-        #     "pairs": data["pairs"],
-        #     "middle": data["middle"],
-        #     "letters":  data["letters"],
-        #     "max_word_length": int(config.get("max.word.length")) or 9
-        # }
-
+        # analyze FT percentages, losses 5 points or less
+        FreethrowService(config).analyze_close_game_ft_percentages("L")
 
 
 

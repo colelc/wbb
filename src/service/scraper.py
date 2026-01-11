@@ -9,7 +9,8 @@ class Scraper(object):
     def __init__(self, config):
         self.logger = AppLogger.get_logger()
         self.espn_url = config.get("espn.url")
-        self.season_results_url = config.get("season.results.url")
+        self.team_id = config.get("team.id")
+        self.season_results_url = config.get("season.results.url").replace("teamId", self.team_id)
         self.seasons = [season.strip() for season in config.get("seasons").split(",")]
         self.output_dir = config.get("output.data.dir")
         self.scrape_file = config.get("scrape.file")

@@ -1,10 +1,6 @@
-import json
-import re
 import os
-from datetime import datetime
 from bs4 import BeautifulSoup
 from src.logging.app_logger import AppLogger
-from src.api.request_utils import RequestUtils
 from src.service.file_service import FileService
 
 class BoxscoreService(object):
@@ -26,6 +22,8 @@ class BoxscoreService(object):
             self.logger.info("not re-generating box score files")
             return
         
+        FileService.delete_all_files_in_directory(self.boxscore_data_path)
+        
         games_list = FileService.read_file(self.metadata_file_path)
         for game in games_list:
             boxscore_file = game["boxscore_file"]
@@ -34,11 +32,14 @@ class BoxscoreService(object):
                 self.logger.error("no team totals, returning")
                 break
 
-            game["home_team"] = homeTeam
-            game["away_team"] = awayTeam
-            game["team_totals"] = team_totals
+            for t in team_totals:
+                if t["team"] == homeTeam:
+                    game["homeTeam"] = t
+                elif t["team"] == awayTeam:
+                    game["away_team"] = t
 
-            #self.logger.info(str(game))
+            # for k,v in game.items():
+            #     self.logger.info(k + " -> " + str(v))
 
             season = game["season"]
             boxscore_data_file_path = os.path.join(self.boxscore_data_path, self.boxscore_data_file.replace("YYYY", str(season)))
