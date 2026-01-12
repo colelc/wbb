@@ -20,8 +20,10 @@ class FreethrowService(object):
         boxscore_list = FileService.read_all_files_in_directory(self.boxscore_data_path)
 
         filtered_boxscore_list = self.filter_by_losses_or_wins(win_or_loss, 5, boxscore_list)
-        for bs in filtered_boxscore_list:
-            self.logger.info(str(bs))
+        #for bs in filtered_boxscore_list:
+        #    self.logger.info(str(bs))
+
+        self.freethrow_analyis(filtered_boxscore_list, win_or_loss)
 
 
     def filter_by_losses_or_wins(self, win_or_loss, point_diff, boxscore_list):
@@ -42,25 +44,31 @@ class FreethrowService(object):
             if self.team_id == homeTeamId:
                 if win_or_loss == "L" and home_score < away_score:
                     filtered.append(boxscore)
+                elif win_or_loss == "W" and home_score > away_score:
+                    filtered.append(boxscore)
             elif self.team_id == awayTeamId:
                 if win_or_loss == "L" and away_score < home_score:
+                    filtered.append(boxscore)
+                elif win_or_loss == "W" and away_score > home_score:
                     filtered.append(boxscore)
 
         return filtered
     
-    def who_won_who_lost(self, boxscore) -> str:
-        winner, loser = None, None
-        home_score = boxscore["homeTeam"]["PTS"]
-        away_score = boxscore["awayTeam"]["PTS"]
-
-        if home_score > away_score:
-            winner = boxscore["homeTeam"]
-            loser = boxscore["awayTeam"]
-        else:
-            winner = boxscore["awayTeam"]
-            loser = boxscore["homeTeam"]
-
+    def freethrow_analyis(self, boxscore_list, win_or_lose):
+        if win_or_lose != "L":
+            return
         
+        for bs in boxscore_list:
+            self.logger.info(str(bs))
+            homeTeam = bs["homeTeam"]["team"]
+            homeTeam_ft = bs["homeTeam"]["FT"]
+            homeTeam_fta = bs["homeTeam"]["FTA"]
+            self.logger.info("homeTeam: " + homeTeam + " " + str(homeTeam_ft) + "-" + str(homeTeam_fta))
+
+            awayTeam = bs["awayTeam"]["team"]
+            awayTeam_ft = bs["awayTeam"]["FT"]
+            awayTeam_fta = bs["awayTeam"]["FTA"]
+            self.logger.info("awayTeam: " + awayTeam + " " + str(awayTeam_ft) + "-" + str(awayTeam_fta))
 
 
 
