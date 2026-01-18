@@ -3,6 +3,7 @@ from src.config.config import Config
 from src.logging.app_logger import AppLogger
 from src.service.scraper import Scraper
 from src.service.boxscore_service import BoxscoreService
+from src.service.playbyplay_service import PlaybyplayService
 from src.service.freethrow_service import FreethrowService
 from src.service.file_service import FileService
 
@@ -26,6 +27,8 @@ class App(object):
         # FreethrowService(config).analyze_close_game_ft_percentages("L")
         # FreethrowService(config).analyze_close_game_ft_percentages("W")
 
+
+        PlaybyplayService(config).collect_playbyplay_data()
 
 
 
