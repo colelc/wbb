@@ -5,6 +5,7 @@ from src.service.scraper import Scraper
 from src.service.boxscore_service import BoxscoreService
 from src.service.playbyplay_service import PlaybyplayService
 from src.service.freethrow_service import FreethrowService
+from src.service.end_3qtr_service import End3QtrService
 from src.service.file_service import FileService
 
 
@@ -23,14 +24,12 @@ class App(object):
         # build the boxscore data
         BoxscoreService(config).collect_boxscore_data()
          
+        PlaybyplayService(config).collect_playbyplay_data()
+
         # analyze FT percentages, losses 5 points or less
         # FreethrowService(config).analyze_close_game_ft_percentages("L")
         # FreethrowService(config).analyze_close_game_ft_percentages("W")
 
-
-        PlaybyplayService(config).collect_playbyplay_data()
-
-
-
+        End3QtrService(config).analyze_after_3_quarters("L")
 
 App.go()
