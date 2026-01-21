@@ -1,0 +1,9 @@
+.classpath
+.project
+.settings/
+WbbScreenScraper*.log*
+modules/
+output/
+players/2022-23/
+dateTracker/2023-23/date_tracker.txt
+
