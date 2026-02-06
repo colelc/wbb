@@ -109,7 +109,19 @@ class PlaybyplayConsumerService(object):
                 if playbyplay_dict is not None:
                     for k,v in playbyplay_dict.items():
                         self.logger.info(str(k) + " -> " + str(v))
-                        
+
+                    game["end_quarter_scores"] = {
+                        "q1": {"q1_home_team_score": playbyplay_dict["1"]["homeScore"], "q1_away_team_score": playbyplay_dict["1"]["awayScore"]},
+                        "q2": {"q2_home_team_score": playbyplay_dict["2"]["homeScore"], "q2_away_team_score": playbyplay_dict["2"]["awayScore"]},
+                        "q3": {"q3_home_team_score": playbyplay_dict["3"]["homeScore"], "q3_away_team_score": playbyplay_dict["3"]["awayScore"]},
+                        "q4": {"q4_home_team_score": playbyplay_dict["4"]["homeScore"], "q4_away_team_score": playbyplay_dict["4"]["awayScore"]}
+                    }
+                    FileService.append(playbyplay_data_file_path, game)
+                    continue
+            
+                game["available"] = "N"
+                FileService.append(playbyplay_data_file_path, game)
+
             except Exception as e:
                 self.logger.info("uh oh, no playbyplay")
                 self.logger.info(str(e))
@@ -186,7 +198,7 @@ class PlaybyplayConsumerService(object):
                                 #self.logger.info("away score: " + str(p["awScr"]) + " home score: " + str(p["hmScr"]))
                                 #self.logger.info(str(p["period"]))
                                 #self.logger.info("away score: " + str(p["awScr"]) + " home score: " + str(p["hmScr"]))
-                                return_dict[str(p["period"])] = {"awayScore": p["awScr"], "homeScore": p["hmScr"]}
+                                return_dict[str(p["period"]["number"])] = {"awayScore": p["awScr"], "homeScore": p["hmScr"]}
                                 #self.logger.info(str(return_dict))
 
                         # for quarter_array in pbp_array:
