@@ -1,9 +1,8 @@
 import os
 from src.config.config import Config
 from src.logging.app_logger import AppLogger
-from src.service.scraper import Scraper
-from src.service.boxscore_service import BoxscoreService
-from src.service.playbyplay_service import PlaybyplayService
+from src.model.model_coaching import ModelCoaching
+from src.service.scrape.scraper import Scraper
 from src.service.freethrow_service import FreethrowService
 from src.service.end_3qtr_service import End3QtrService
 from src.service.file_service import FileService
@@ -19,17 +18,15 @@ class App(object):
         logger = AppLogger.set_up_logger("app.log")
         config = Config.set_up_config(".env")
 
-        Scraper(config).scrape()
+        Scraper(config)
 
-        # build the boxscore data
-        BoxscoreService(config).collect_boxscore_data()
-         
-        PlaybyplayService(config).collect_playbyplay_data()
+        # start running models
+        #ModelCoaching().model()
 
         # analyze FT percentages, losses 5 points or less
         # FreethrowService(config).analyze_close_game_ft_percentages("L")
         # FreethrowService(config).analyze_close_game_ft_percentages("W")
 
-        End3QtrService(config).analyze_after_3_quarters("L")
+        #End3QtrService(config).analyze_after_3_quarters("L")
 
 App.go()

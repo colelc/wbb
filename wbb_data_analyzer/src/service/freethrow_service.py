@@ -19,45 +19,42 @@ class FreethrowService(object):
         # collect the boxscore data
         boxscore_list = FileService.read_all_files_in_directory(self.boxscore_data_path)
 
-        filtered_boxscore_list = self.filter_by_losses_or_wins(win_or_loss, 5, boxscore_list)
-        #for bs in filtered_boxscore_list:
-        #    self.logger.info(str(bs))
+        filtered_boxscore_list = list()
+
+        if win_or_loss == "L":
+            losses = self.get_losses(boxscore_list)
+            if len(losses) > 0:
+                filtered_boxscore_list = self.filter_losses_by_margin(losses, 5, "less")
+        else:
+            wins = self.get_wins(boxscore_list)
+            if len(wins) > 0:
+                filtered_boxscore_list = self.filter_wins_by_margin(wins, 5, "less")
+        
+        # for bs in filtered_boxscore_list:
+        #     self.logger.info(str(bs["winningTeam"]))
+        #     self.logger.info(str(bs["losingTeam"]))
 
         self.freethrow_analyis(filtered_boxscore_list, win_or_loss)
-
-
-    def filter_by_losses_or_wins(self, win_or_loss, point_diff, boxscore_list):
-        filtered = list()
-
-        for boxscore in boxscore_list:
-            # for k,v in boxscore.items():
-            #     self.logger.info(k + " -> " + str(v))
-
-            home_score = boxscore["homeTeam"]["PTS"]
-            away_score = boxscore["awayTeam"]["PTS"]
-            homeTeamId = boxscore["homeTeamId"]
-            awayTeamId = boxscore["awayTeamId"]
-
-            if abs(home_score - away_score) > point_diff:
-                continue
-
-            if self.team_id == homeTeamId:
-                if win_or_loss == "L" and home_score < away_score:
-                    filtered.append(boxscore)
-                elif win_or_loss == "W" and home_score > away_score:
-                    filtered.append(boxscore)
-            elif self.team_id == awayTeamId:
-                if win_or_loss == "L" and away_score < home_score:
-                    filtered.append(boxscore)
-                elif win_or_loss == "W" and away_score > home_score:
-                    filtered.append(boxscore)
-
-        return filtered
     
+    def get_losses(self, boxscore_list):
+        return list(filter(lambda x: x["losingTeamId"] == self.team_id, boxscore_list))
+    
+    def get_wins(self, boxscore_list):
+        return list(filter(lambda x: x["winningTeamId"] == self.team_id, boxscore_list))
+    
+    def filter_losses_by_margin(self, losing_list, margin, moreOrLess):
+        if moreOrLess == "more":
+            return list(filter(lambda x: abs(x["losingTeam"]["margin"]) > abs(margin), losing_list))
+        else:
+            return list(filter(lambda x: abs(x["losingTeam"]["margin"]) <= abs(margin), losing_list))
+    
+    def filter_wins_by_margin(self, winning_list, margin, moreOrLess):
+        if moreOrLess == "more":
+            return list(filter(lambda x: abs(x["winningTeam"]["margin"]) > abs(margin), winning_list))
+        else:
+            return list(filter(lambda x: abs(x["winningTeam"]["margin"]) <= abs(margin), winning_list))
+
     def freethrow_analyis(self, boxscore_list, win_or_lose):
-        #if win_or_lose != "L":
-        #    return
-        
         for bs in boxscore_list:
             print("")
             #self.logger.info(str(bs))

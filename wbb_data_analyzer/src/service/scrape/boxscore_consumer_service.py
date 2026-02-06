@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from src.logging.app_logger import AppLogger
 from src.service.file_service import FileService
 
-class BoxscoreService(object):
+class BoxscoreConsumerService(object):
     def __init__(self, config):
         self.logger = AppLogger.get_logger()
         self.config = config
@@ -53,6 +53,41 @@ class BoxscoreService(object):
                     game["homeTeam"] = t
                 elif t["team"] == awayTeam:
                     game["awayTeam"] = t
+
+            margin = abs(game["homeTeam"]["PTS"] - game["awayTeam"]["PTS"])
+
+            if game["awayTeam"]["PTS"] > game["homeTeam"]["PTS"]:
+                game["winningTeamId"] = awayTeamId
+                game["winningTeam"] = {
+                    "team": awayTeam,
+                    "teamId": awayTeamId,
+                    "PTS": game["awayTeam"]["PTS"],
+                    "margin": margin
+                }
+
+                game["losingTeamId"] = homeTeamId
+                game["losingTeam"] = {
+                    "team": homeTeam,
+                    "teamId": homeTeamId,
+                    "PTS": game["homeTeam"]["PTS"],
+                    "margin": -1 * margin
+                }
+            else:
+                game["winningTeamId"] = homeTeamId
+                game["winningTeam"] = {
+                    "team": homeTeam,
+                    "teamId": homeTeamId,
+                    "PTS": game["homeTeam"]["PTS"],
+                    "margin": margin
+                }
+                
+                game["losingTeamId"] = awayTeamId
+                game["losingTeam"] = {
+                    "team": awayTeam,
+                    "teamId": awayTeamId,
+                    "PTS": game["awayTeam"]["PTS"],
+                    "margin": -1 * margin
+                }
 
             #for k,v in game.items():
             #    self.logger.info(k + " -> " + str(v))
