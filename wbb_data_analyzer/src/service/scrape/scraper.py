@@ -51,7 +51,7 @@ class Scraper(object):
         PlaybyplayConsumerService(config, self.team_ids).collect_playbyplay_data()
 
         # generate unified JSON structure in files
-        CombineConsumerService(config).combine()
+        CombineConsumerService(config, self.team_ids).combine()
 
         # end __init__
 

@@ -4,41 +4,43 @@ from src.logging.app_logger import AppLogger
 from src.service.file_service import FileService
 
 class CombineConsumerService(object):
-    def __init__(self, config):
+    def __init__(self, config, team_ids):
         self.logger = AppLogger.get_logger()
         self.config = config
         
-        self.output_dir = config.get("output.data.dir")
-        self.boxscore_data_dir = config.get("boxscore.data.dir")
-        self.boxscore_data_path = os.path.join(self.output_dir, self.boxscore_data_dir)
+        self.team_ids = team_ids
 
+        self.output_dir = config.get("output.data.dir")
+
+        self.boxscore_data_file = config.get("boxscore.data.file")
+        self.boxscore_data_dir = config.get("boxscore.data.dir")
+
+        self.playbyplay_data_file = config.get("playbyplay.data.file")
         self.playbyplay_data_dir = config.get("playbyplay.data.dir")
-        self.playbyplay_data_path = os.path.join(self.output_dir, self.playbyplay_data_dir)
 
         self.combined_data_file = config.get("combined.data.file")
         self.combined_data_dir = config.get("combined.data.dir")
-        self.combined_data_path = os.path.join(self.output_dir, self.combined_data_dir)
-        os.makedirs(self.combined_data_path, exist_ok=True)
+        #self.combined_data_path = os.path.join(self.output_dir, self.combined_data_dir)
+        #os.makedirs(self.combined_data_path, exist_ok=True)
 
     def combine(self):
-        boxscores = FileService.read_all_files_in_directory(self.boxscore_data_path)
-        playbyplays = FileService.read_all_files_in_directory(self.playbyplay_data_path)
+        for teamId in self.team_ids:
+            combined_data_file_path = os.path.join(self.output_dir, str(teamId), self.combined_data_dir)
+            os.makedirs(combined_data_file_path, exist_ok=True)
 
-        for boxscore in boxscores:
-            print("BOXSCORE")
-            self.logger.info(str(boxscore))
+            boxscore_file_path = os.path.join(self.output_dir, str(teamId), self.boxscore_data_dir)
+            boxscores = FileService.read_all_files_in_directory(boxscore_file_path)
 
-            season = boxscore["season"]
-            
-            playbyplay = (list(filter(lambda pbp: pbp["gameId"] == boxscore["gameId"], playbyplays)))[0]
-            print("PLAYBYPLAY")
-            self.logger.info(str(playbyplay))
+            playbyplay_file_path = os.path.join(self.output_dir, str(teamId), self.playbyplay_data_dir)
+            playbyplays = FileService.read_all_files_in_directory(playbyplay_file_path)
 
-            combined = self.build_object(boxscore, playbyplay)
-            
-            combined_data_file_path = os.path.join(self.combined_data_path, self.combined_data_file.replace("YYYY", str(season)))
-            self.logger.info(str(combined_data_file_path))
-            FileService.append(combined_data_file_path, combined)
+            for boxscore in boxscores:
+                season = boxscore["season"]
+                playbyplay = (list(filter(lambda pbp: pbp["gameId"] == boxscore["gameId"], playbyplays)))[0]
+                combined = self.build_object(boxscore, playbyplay)
+                
+                data_file_path = os.path.join(combined_data_file_path, self.combined_data_file.replace("YYYY", str(season)))
+                FileService.append(data_file_path, combined)
 
     def build_object(self, boxscore, playbyplay) -> dict:
         season = boxscore["season"]
