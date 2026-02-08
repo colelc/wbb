@@ -24,9 +24,15 @@ class CombineConsumerService(object):
         #os.makedirs(self.combined_data_path, exist_ok=True)
 
     def combine(self):
+        do_combined = self.config.get("do.combined")
+        if not do_combined or do_combined.strip().lower() != "y":
+            self.logger.info("not re-generating combined files")
+            return
+        
         for teamId in self.team_ids:
             combined_data_file_path = os.path.join(self.output_dir, str(teamId), self.combined_data_dir)
             os.makedirs(combined_data_file_path, exist_ok=True)
+            FileService.delete_all_files_in_directory(combined_data_file_path)
 
             boxscore_file_path = os.path.join(self.output_dir, str(teamId), self.boxscore_data_dir)
             boxscores = FileService.read_all_files_in_directory(boxscore_file_path)
@@ -44,10 +50,10 @@ class CombineConsumerService(object):
 
     def build_object(self, boxscore, playbyplay) -> dict:
         season = boxscore["season"]
-        winningTeamId = boxscore["winningTeamId"]
-        losingTeamId = boxscore["losingTeamId"]
-        homeTeamId = boxscore["homeTeamId"]
-        awayTeamId = boxscore["awayTeamId"]
+        winningTeamId = int(boxscore["winningTeamId"])
+        losingTeamId = int(boxscore["losingTeamId"])
+        homeTeamId = int(boxscore["homeTeamId"])
+        awayTeamId = int(boxscore["awayTeamId"])
 
         combined = {
             "season": season,
@@ -66,7 +72,7 @@ class CombineConsumerService(object):
                 "winningTeamMargin": boxscore["winningTeam"]["margin"],
 
                 "losingTeam": boxscore["losingTeam"]["team"],
-                "losningTeamId": boxscore["losingTeam"]["teamId"],
+                "losingTeamId": boxscore["losingTeam"]["teamId"],
                 "losingTeamPoints": boxscore["losingTeam"]["PTS"],
                 "losingTeamMargin": boxscore["losingTeam"]["margin"],
 
