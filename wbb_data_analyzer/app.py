@@ -24,8 +24,8 @@ class App(object):
         #ModelCoaching().model()
 
         # analyze FT percentages, losses 5 points or less
-        # FreethrowService(config).analyze_close_game_ft_percentages("L")
-        # FreethrowService(config).analyze_close_game_ft_percentages("W")
+        #FreethrowService(config).analyze_close_game_ft_percentages("L")
+        #FreethrowService(config).analyze_close_game_ft_percentages("W")
 
         #End3QtrService(config).analyze_after_3_quarters("L")
 

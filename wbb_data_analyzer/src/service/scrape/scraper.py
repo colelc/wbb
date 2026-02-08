@@ -6,6 +6,7 @@ from src.api.request_utils import RequestUtils
 from src.service.file_service import FileService
 from src.service.scrape.boxscore_consumer_service import BoxscoreConsumerService
 from src.service.scrape.playbyplay_consumer_service import PlaybyplayConsumerService
+from src.service.scrape.combine_consumer_service import CombineConsumerService
 
 class Scraper(object):
     def __init__(self, config):
@@ -16,7 +17,7 @@ class Scraper(object):
         self.seasons = [season.strip() for season in config.get("seasons").split(",")]
         self.output_dir = config.get("output.data.dir")
         os.makedirs(self.output_dir, exist_ok=True)
-        #self.scrape_file = config.get("scrape.file")
+
         self.scrape_schedule_file = config.get("scrape.schedule.file")
         self.scrape_boxscore_file = config.get("scrape.boxscore.file")
         self.scrape_playbyplay_file = config.get("scrape.playbyplay.file")
@@ -46,6 +47,9 @@ class Scraper(object):
 
         # build the playbyplay data
         PlaybyplayConsumerService(config).collect_playbyplay_data()
+
+        # generate unified JSON structure in files
+        CombineConsumerService(config).combine()
 
         # end __init__
 
@@ -138,25 +142,3 @@ class Scraper(object):
             self.logger.error(str(e))
             return None
 
-        # # letters
-        # chalkboard_div = soup.select_one("div.spelling-bee-chalkboard")
-        # FileService.write_file(self.letter_file_path, chalkboard_div)
-
-        # letters = chalkboard_div.find_all(class_="chalkboard-letter")
-        # letter_list = [letter.get_text().upper() for letter in letters]
-
-        # # center letter (middle)
-        # middle_dom = chalkboard_div.find(class_="center-letter")
-        # middle = middle_dom.get_text().upper()
-
-        # # pair list
-        # pair_container_divs = soup.select('div.pair.letter-label')
-        # pair_list = [pair_div.get_text().upper() for pair_div in pair_container_divs]
-        # FileService.write_file(self.pair_file_path, pair_container_divs)
-
-        # return {
-        #     "letters" : letter_list,
-        #     "middle": middle,
-        #     "pairs": pair_list
-        # }
-    

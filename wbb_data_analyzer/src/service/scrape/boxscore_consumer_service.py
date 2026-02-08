@@ -15,7 +15,8 @@ class BoxscoreConsumerService(object):
         self.team_id = config.get("team.id")
 
         self.boxscore_data_file = config.get("boxscore.data.file")
-        self.boxscore_data_path = os.path.join(self.output_dir, "boxscore")
+        self.boxscore_data_dir = config.get("boxscore.data.dir")
+        self.boxscore_data_path = os.path.join(self.output_dir, self.boxscore_data_dir)
         os.makedirs(self.boxscore_data_path, exist_ok=True)
 
     def collect_boxscore_data(self):

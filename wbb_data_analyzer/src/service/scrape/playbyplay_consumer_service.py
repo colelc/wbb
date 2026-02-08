@@ -26,7 +26,8 @@ class PlaybyplayConsumerService(object):
         self.boxscore_data = FileService.read_all_files_in_directory(self.boxscore_data_path)
 
         self.playbyplay_data_file = config.get("playbyplay.data.file")
-        self.playbyplay_data_path = os.path.join(self.output_dir, "playbyplay")
+        self.playbyplay_data_dir = config.get("playbyplay.data.dir")
+        self.playbyplay_data_path = os.path.join(self.output_dir, self.playbyplay_data_dir)
         os.makedirs(self.playbyplay_data_path, exist_ok=True)
 
     def collect_playbyplay_data(self):
@@ -107,8 +108,8 @@ class PlaybyplayConsumerService(object):
                 playbyplay_file = game["playbyplay_file"]
                 playbyplay_dict = self.process_playbyplay_file_version2(playbyplay_file)
                 if playbyplay_dict is not None:
-                    for k,v in playbyplay_dict.items():
-                        self.logger.info(str(k) + " -> " + str(v))
+                    # for k,v in playbyplay_dict.items():
+                    #     self.logger.info(str(k) + " -> " + str(v))
 
                     game["end_quarter_scores"] = {
                         "q1": {"q1_home_team_score": playbyplay_dict["1"]["homeScore"], "q1_away_team_score": playbyplay_dict["1"]["awayScore"]},
@@ -116,6 +117,7 @@ class PlaybyplayConsumerService(object):
                         "q3": {"q3_home_team_score": playbyplay_dict["3"]["homeScore"], "q3_away_team_score": playbyplay_dict["3"]["awayScore"]},
                         "q4": {"q4_home_team_score": playbyplay_dict["4"]["homeScore"], "q4_away_team_score": playbyplay_dict["4"]["awayScore"]}
                     }
+                    game["available"] = "Y"
                     FileService.append(playbyplay_data_file_path, game)
                     continue
             
