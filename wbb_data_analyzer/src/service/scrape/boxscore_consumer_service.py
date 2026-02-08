@@ -5,19 +5,16 @@ from src.logging.app_logger import AppLogger
 from src.service.file_service import FileService
 
 class BoxscoreConsumerService(object):
-    def __init__(self, config):
+    def __init__(self, config, team_ids):
         self.logger = AppLogger.get_logger()
         self.config = config
         self.output_dir = config.get("output.data.dir")
-        metadata_file = config.get("metadata.file")
-        self.metadata_file_path = os.path.join(self.output_dir, metadata_file)
+        self.metadata_file = config.get("metadata.file")
         self.seasons = [season.strip() for season in config.get("seasons").split(",")]
-        self.team_id = config.get("team.id")
-
+        self.team_ids = team_ids
         self.boxscore_data_file = config.get("boxscore.data.file")
         self.boxscore_data_dir = config.get("boxscore.data.dir")
-        self.boxscore_data_path = os.path.join(self.output_dir, self.boxscore_data_dir)
-        os.makedirs(self.boxscore_data_path, exist_ok=True)
+
 
     def collect_boxscore_data(self):
         do_boxscore = self.config.get("do.boxscore")
@@ -25,77 +22,85 @@ class BoxscoreConsumerService(object):
             self.logger.info("not re-generating box score files")
             return
         
-        FileService.delete_all_files_in_directory(self.boxscore_data_path)
-        
-        games_list = FileService.read_file(self.metadata_file_path)
-        for game in games_list:
-            del game["playbyplay_url"] # don't want in boxscore file
-            del game["playbyplay_file"] # don't want in boxscore file
+        for teamId in self.team_ids:
+            boxscore_file_path = os.path.join(self.output_dir, str(teamId), self.boxscore_data_dir)
+            os.makedirs(boxscore_file_path, exist_ok=True)
+            FileService.delete_all_files_in_directory(boxscore_file_path)
+
+            metadata_file_path = os.path.join(self.output_dir, str(teamId), self.metadata_file)
+            games_list = FileService.read_file(metadata_file_path)
             
-            boxscore_file = game["boxscore_file"]
-           
-            teams_dict, team_totals = self.process_boxscore_file(boxscore_file)
-            if team_totals is None or teams_dict is None:
-                self.logger.error("no team totals, returning")
-                break
-
-            #self.logger.info(str(teams_dict))
-            #self.logger.info(str(team_totals))
-            homeTeam = teams_dict["homeTeam"].strip()
-            awayTeam = teams_dict["awayTeam"].strip()
-            homeTeamId = teams_dict["homeTeamId"].strip()
-            awayTeamId = teams_dict["awayTeamId"].strip()
-
-            game["homeTeamId"] = homeTeamId
-            game["awayTeamId"] = awayTeamId
-
-            for t in team_totals:
-                if t["team"] == homeTeam:
-                    game["homeTeam"] = t
-                elif t["team"] == awayTeam:
-                    game["awayTeam"] = t
-
-            margin = abs(game["homeTeam"]["PTS"] - game["awayTeam"]["PTS"])
-
-            if game["awayTeam"]["PTS"] > game["homeTeam"]["PTS"]:
-                game["winningTeamId"] = awayTeamId
-                game["winningTeam"] = {
-                    "team": awayTeam,
-                    "teamId": awayTeamId,
-                    "PTS": game["awayTeam"]["PTS"],
-                    "margin": margin
-                }
-
-                game["losingTeamId"] = homeTeamId
-                game["losingTeam"] = {
-                    "team": homeTeam,
-                    "teamId": homeTeamId,
-                    "PTS": game["homeTeam"]["PTS"],
-                    "margin": -1 * margin
-                }
-            else:
-                game["winningTeamId"] = homeTeamId
-                game["winningTeam"] = {
-                    "team": homeTeam,
-                    "teamId": homeTeamId,
-                    "PTS": game["homeTeam"]["PTS"],
-                    "margin": margin
-                }
+            for game in games_list:
+                label = str(teamId) + " -> " + str(game["boxscore_url"] + "  ")
+                # self.logger.info(label)
+                del game["playbyplay_url"] # don't want in boxscore file
+                del game["playbyplay_file"] # don't want in boxscore file
                 
-                game["losingTeamId"] = awayTeamId
-                game["losingTeam"] = {
-                    "team": awayTeam,
-                    "teamId": awayTeamId,
-                    "PTS": game["awayTeam"]["PTS"],
-                    "margin": -1 * margin
-                }
+                boxscore_file = game["boxscore_file"]
+            
+                teams_dict, team_totals = self.process_boxscore_file(boxscore_file)
+                if team_totals is None or teams_dict is None:
+                    self.logger.error(label + "no team totals, returning")
+                    #break
+                    continue
 
-            #for k,v in game.items():
-            #    self.logger.info(k + " -> " + str(v))
+                #self.logger.info(str(teams_dict))
+                #self.logger.info(str(team_totals))
+                homeTeam = teams_dict["homeTeam"].strip()
+                awayTeam = teams_dict["awayTeam"].strip()
+                homeTeamId = teams_dict["homeTeamId"].strip()
+                awayTeamId = teams_dict["awayTeamId"].strip()
 
-            season = game["season"]
-            boxscore_data_file_path = os.path.join(self.boxscore_data_path, self.boxscore_data_file.replace("YYYY", str(season)))
-            FileService.append(boxscore_data_file_path, game)
+                game["homeTeamId"] = homeTeamId
+                game["awayTeamId"] = awayTeamId
+
+                for t in team_totals:
+                    if t["team"] == homeTeam:
+                        game["homeTeam"] = t
+                    elif t["team"] == awayTeam:
+                        game["awayTeam"] = t
+
+                margin = abs(game["homeTeam"]["PTS"] - game["awayTeam"]["PTS"])
+
+                if game["awayTeam"]["PTS"] > game["homeTeam"]["PTS"]:
+                    game["winningTeamId"] = awayTeamId
+                    game["winningTeam"] = {
+                        "team": awayTeam,
+                        "teamId": awayTeamId,
+                        "PTS": game["awayTeam"]["PTS"],
+                        "margin": margin
+                    }
+
+                    game["losingTeamId"] = homeTeamId
+                    game["losingTeam"] = {
+                        "team": homeTeam,
+                        "teamId": homeTeamId,
+                        "PTS": game["homeTeam"]["PTS"],
+                        "margin": -1 * margin
+                    }
+                else:
+                    game["winningTeamId"] = homeTeamId
+                    game["winningTeam"] = {
+                        "team": homeTeam,
+                        "teamId": homeTeamId,
+                        "PTS": game["homeTeam"]["PTS"],
+                        "margin": margin
+                    }
+                    
+                    game["losingTeamId"] = awayTeamId
+                    game["losingTeam"] = {
+                        "team": awayTeam,
+                        "teamId": awayTeamId,
+                        "PTS": game["awayTeam"]["PTS"],
+                        "margin": -1 * margin
+                    }
+
+                #for k,v in game.items():
+                #    self.logger.info(k + " -> " + str(v))
+
+                season = game["season"]
+                boxscore_data_file_path = os.path.join(boxscore_file_path, self.boxscore_data_file.replace("YYYY", str(season)))
+                FileService.append(boxscore_data_file_path, game)
 
     def process_boxscore_file(self, boxscore_file:str):
         with open(boxscore_file, "r", encoding="utf8") as file:
@@ -120,7 +125,7 @@ class BoxscoreConsumerService(object):
                 else:
                     results.append(team_totals)
 
-            return teams_dict, results
+            return teams_dict, results if len(results) > 0 else None
         
         
     def extract_home_away(self, soup):
