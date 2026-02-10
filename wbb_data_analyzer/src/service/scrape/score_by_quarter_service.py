@@ -32,7 +32,7 @@ class ScoreByQuarterService(object):
         homeTeam, awayTeam = self.get_team_data(soup, game, label)
 
         if homeTeam is None or awayTeam is None:
-            self.logger.info("cannot get quarter scores")
+            self.logger.info(label + "cannot get quarter scores")
             return None
         
         # self.logger.info(str(homeTeam))
@@ -100,7 +100,7 @@ class ScoreByQuarterService(object):
 
                     #self.logger.info(str(indices))
                     if len(indices) == 0 or len(indices) != 2:
-                        self.logger.info("wrong indices values")
+                        self.logger.info(label + "wrong indices values")
                         return None, None
                     
                     tm1_ix = indices[0]
@@ -132,7 +132,7 @@ class ScoreByQuarterService(object):
                         return team2, team1
                     
                 except Exception as e:
-                    self.logger.error(str(e))
+                    self.logger.error(label + str(e))
                     return None, None
                 
         return None, None

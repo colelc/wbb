@@ -104,7 +104,7 @@ class CombineConsumerService(object):
                         "q4_winning_team_score": playbyplay["end_quarter_scores"]["q4"]["q4_home_team_score"] if winningTeamId == homeTeamId else playbyplay["end_quarter_scores"]["q4"]["q4_away_team_score"],
                         "q4_losing_team_score": playbyplay["end_quarter_scores"]["q4"]["q4_home_team_score"] if winningTeamId == awayTeamId else playbyplay["end_quarter_scores"]["q4"]["q4_away_team_score"],
                         },
-                } if playbyplay["available"] == "Y" else {},
+                }, # if playbyplay["available"] == "Y" else {},
             },
             "winningTeamStats": {
                 "teamId": winningTeamId,
