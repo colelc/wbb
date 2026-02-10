@@ -6,10 +6,10 @@ from src.service.utility_service import UtilityService
 class FreethrowService(object):
     def __init__(self, config):
         self.logger = AppLogger.get_logger()
-        self.output_dir = config.get("output.data.dir")
-        self.combined_data_file = config.get("combined.data.file")
-        self.combined_data_dir = config.get("combined.data.dir")
-        self.team_ids = UtilityService.get_team_ids(config)
+        self.output_dir = UtilityService.get_output_dir()
+        self.combined_data_file = UtilityService.get_combined_data_file()
+        self.combined_data_dir = UtilityService.get_combined_data_dir()
+        self.team_ids = UtilityService.get_team_ids()
 
     def analyze_close_game_ft_percentages(self, win_or_loss):
         for teamId in self.team_ids:
