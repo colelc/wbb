@@ -30,12 +30,10 @@ class FileService(object):
         with open(filename, "w", encoding="utf-8") as f:
             f.write(str(obj))
 
-    # @staticmethod
-    # def delete_file(filename:str):
-    #     print("deleting file: " + str(filename))
-    #     if os.path.exists(filename):
-    #         deleted = os.remove(filename)
-    #         print("deleted: " + str(deleted))
+    @staticmethod
+    def delete_directory(directory:str):
+        if os.path.isdir(directory):
+            shutil.rmtree(directory)
 
     @staticmethod
     def delete_file(filename):

@@ -7,51 +7,40 @@ from src.service.file_service import FileService
 from src.service.scrape.boxscore_consumer_service import BoxscoreConsumerService
 from src.service.scrape.playbyplay_consumer_service import PlaybyplayConsumerService
 from src.service.scrape.combine_consumer_service import CombineConsumerService
+from src.service.utility_service import UtilityService
 
 class Scraper(object):
     def __init__(self, config):
         self.logger = AppLogger.get_logger()
         self.espn_url = config.get("espn.url")
-        self.team_ids = [int(team_id.strip()) for team_id in config.get("team.ids").split(",")]
-        season_results_url = config.get("season.results.url")
-        self.season_results_url = [season_results_url.replace("teamId", str(teamId)) for teamId in self.team_ids]
+        self.team_ids = UtilityService.get_team_ids()
+        self.season_results_url = config.get("season.results.url")
+        self.seasons = UtilityService.get_seasons()
 
-        self.seasons = [season.strip() for season in config.get("seasons").split(",")]
-        self.output_dir = config.get("output.data.dir")
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.output_dir = UtilityService.get_output_dir()
 
-        self.scrape_schedule_file = config.get("scrape.schedule.file")
-        self.scrape_boxscore_file = config.get("scrape.boxscore.file")
-        self.scrape_playbyplay_file = config.get("scrape.playbyplay.file")
-        metadata_file = config.get("metadata.file")
-        self.metadata_file_path = os.path.join(self.output_dir, metadata_file)
+        self.scrape_data_dir = UtilityService.get_scrape_data_dir()
+        self.schedule_data_dir = UtilityService.get_schedule_data_dir()
+        self.boxscore_data_dir = UtilityService.get_boxscore_data_dir()
+        self.playbyplay_data_dir = UtilityService.get_playbyplay_data_dir()
 
-        scrape_schedule_path = os.path.join(self.output_dir, "scrape", "schedule")
-        os.makedirs(scrape_schedule_path, exist_ok=True)
-
-        scrape_boxscore_path = os.path.join(self.output_dir, "scrape", "boxscore")
-        os.makedirs(scrape_boxscore_path, exist_ok=True)
-
-        scrape_playbyplay_path = os.path.join(self.output_dir, "scrape", "playbyplay")
-        os.makedirs(scrape_playbyplay_path, exist_ok=True)
-
-        for season in self.seasons:
-            os.makedirs(os.path.join(scrape_schedule_path, str(season)), exist_ok=True)
-            os.makedirs(os.path.join(scrape_boxscore_path, str(season)), exist_ok=True)
-            os.makedirs(os.path.join(scrape_playbyplay_path, str(season)), exist_ok=True)
+        self.scrape_schedule_file = UtilityService.get_scrape_schedule_file()
+        self.scrape_boxscore_file = UtilityService.get_scrape_boxscore_file()
+        self.scrape_playbyplay_file = UtilityService.get_scrape_playbyplay_file()
+        self.metadata_file = UtilityService.get_metadata_file()
 
         self.config = config
 
         self.scrape()
 
         # build the boxscore data
-        BoxscoreConsumerService(config, self.team_ids).collect_boxscore_data()
+        BoxscoreConsumerService(config).collect_boxscore_data()
 
         # build the playbyplay data
-        PlaybyplayConsumerService(config, self.team_ids).collect_playbyplay_data()
+        PlaybyplayConsumerService(config).collect_playbyplay_data()
 
         # generate unified JSON structure in files
-        CombineConsumerService(config, self.team_ids).combine()
+        CombineConsumerService(config).combine()
 
         # end __init__
 
@@ -61,18 +50,32 @@ class Scraper(object):
             self.logger.info("not scraping")
             return
         
-        FileService.delete_file(self.metadata_file_path)
+        os.makedirs(self.output_dir, exist_ok=True)
         
-        games = dict()
-
-        for results_url in self.season_results_url:
+        for teamId in self.team_ids:
+            metadata_file_path = os.path.join(self.output_dir, str(teamId), self.scrape_data_dir, self.metadata_file)
+            FileService.delete_file(metadata_file_path)
+            
             for season in self.seasons:
-                url = self.espn_url + results_url + str(season)
+                scrape_schedule_dir = os.path.join(self.output_dir, str(teamId), self.scrape_data_dir, self.schedule_data_dir, str(season))
+                os.makedirs(scrape_schedule_dir, exist_ok=True)
+                FileService.delete_all_files_in_directory(scrape_schedule_dir)
+
+                scrape_boxscore_dir = os.path.join(self.output_dir, str(teamId), self.scrape_data_dir, self.boxscore_data_dir, str(season))
+                os.makedirs(scrape_boxscore_dir, exist_ok=True)
+                FileService.delete_all_files_in_directory(scrape_schedule_dir)
+
+                scrape_playbyplay_dir = os.path.join(self.output_dir, str(teamId), self.scrape_data_dir, self.playbyplay_data_dir, str(season))
+                os.makedirs(scrape_playbyplay_dir, exist_ok=True)
+                FileService.delete_all_files_in_directory(scrape_playbyplay_dir)
+
+                season_results_url = self.season_results_url.replace("teamId", str(teamId))
+                url = self.espn_url + season_results_url + str(season)
                 self.logger.info(url)
                 schedule_soup = RequestUtils(url, False).get_data()
 
-                scrape_schedule_file_path = os.path.join(self.output_dir, "scrape", "schedule", str(season), self.scrape_schedule_file.replace("YYYY", str(season)))
-                FileService.write_file(scrape_schedule_file_path, schedule_soup)
+                path = os.path.join(scrape_schedule_dir, self.scrape_schedule_file.replace("YYYY", str(season)))
+                FileService.write_file(path, schedule_soup)
 
                 # get game URLs
                 links = schedule_soup.select('td.Table__TD span.ml4[data-testid="link"] a.AnchorLink')
@@ -90,26 +93,26 @@ class Scraper(object):
                         # collect the boxscore url page
                         gameId, boxscore_url = self.to_boxscore_url(url)
                         boxscore_soup = RequestUtils(boxscore_url, False).get_data()
-                        boxscore_scrape_file_path = os.path.join(self.output_dir, "scrape", "boxscore", str(season), self.scrape_boxscore_file.replace("YYYYMMDD", str(game_date)))
-                        if not FileService.file_exists(boxscore_scrape_file_path):
-                            FileService.write_file(boxscore_scrape_file_path, boxscore_soup)
+                        boxscore_path = os.path.join(scrape_boxscore_dir, self.scrape_boxscore_file.replace("YYYYMMDD", str(game_date)))
+                        FileService.write_file(boxscore_path, boxscore_soup)
 
                         # collect the play-by-play url page
                         # gameId already have
                         playbyplay_url = boxscore_url.replace("boxscore", "playbyplay")
                         playbyplay_soup = RequestUtils(playbyplay_url, False).get_data()
-                        playbyplay_scrape_file_path = os.path.join(self.output_dir, "scrape", "playbyplay", str(season), self.scrape_playbyplay_file.replace("YYYYMMDD", str(game_date)))
-                        if not FileService.file_exists(playbyplay_scrape_file_path):
-                            FileService.write_file(playbyplay_scrape_file_path, playbyplay_soup)
+                        playbyplay_path = os.path.join(scrape_playbyplay_dir, self.scrape_playbyplay_file.replace("YYYYMMDD", str(game_date)))
+                        FileService.write_file(playbyplay_path, playbyplay_soup)
 
-                        FileService.append(self.metadata_file_path, {
+                        metadata_file_path = os.path.join(self.output_dir, str(teamId), self.scrape_data_dir, self.metadata_file)
+
+                        FileService.append(metadata_file_path, {
                             "season": season,
                             "game_date": game_date,
                             "gameId": gameId,
-                            "boxscore_file": boxscore_scrape_file_path,
+                            "boxscore_file": boxscore_path,
                             "boxscore_url": boxscore_url,
                             "playbyplay_url": playbyplay_url,
-                            "playbyplay_file": playbyplay_scrape_file_path
+                            "playbyplay_file": playbyplay_path
                             }
                         )
                     except Exception as e:

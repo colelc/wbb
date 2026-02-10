@@ -4,13 +4,15 @@ from datetime import datetime
 from src.logging.app_logger import AppLogger
 from src.api.request_utils import RequestUtils
 from src.service.file_service import FileService
+from src.service.utility_service import UtilityService
 
 class End3QtrService(object):
     def __init__(self, config):
         self.logger = AppLogger.get_logger()
         self.config = config
 
-        self.team_id = config.get("team.id")
+        #self.team_id = config.get("team.id")
+        self.team_ids = UtilityService.get_team_ids(config)
 
         self.output_dir = config.get("output.data.dir")
         self.playbyplay_data_file = config.get("playbyplay.data.file")

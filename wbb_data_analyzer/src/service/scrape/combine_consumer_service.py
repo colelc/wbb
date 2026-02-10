@@ -2,26 +2,25 @@ import os
 import sys
 from src.logging.app_logger import AppLogger
 from src.service.file_service import FileService
+from src.service.utility_service import UtilityService
 
 class CombineConsumerService(object):
-    def __init__(self, config, team_ids):
+    def __init__(self, config):
         self.logger = AppLogger.get_logger()
         self.config = config
         
-        self.team_ids = team_ids
+        self.team_ids = UtilityService.get_team_ids()
 
-        self.output_dir = config.get("output.data.dir")
+        self.output_dir = UtilityService.get_output_dir()
 
-        self.boxscore_data_file = config.get("boxscore.data.file")
-        self.boxscore_data_dir = config.get("boxscore.data.dir")
+        self.boxscore_data_file = UtilityService.get_boxscore_data_file()
+        self.boxscore_data_dir = UtilityService.get_boxscore_data_dir()
 
-        self.playbyplay_data_file = config.get("playbyplay.data.file")
-        self.playbyplay_data_dir = config.get("playbyplay.data.dir")
+        self.playbyplay_data_file = UtilityService.get_playbyplay_data_file()
+        self.playbyplay_data_dir = UtilityService.get_playbyplay_data_dir()
 
-        self.combined_data_file = config.get("combined.data.file")
-        self.combined_data_dir = config.get("combined.data.dir")
-        #self.combined_data_path = os.path.join(self.output_dir, self.combined_data_dir)
-        #os.makedirs(self.combined_data_path, exist_ok=True)
+        self.combined_data_file = UtilityService.get_combined_data_file()
+        self.combined_data_dir = UtilityService.get_combined_data_dir()
 
     def combine(self):
         do_combined = self.config.get("do.combined")

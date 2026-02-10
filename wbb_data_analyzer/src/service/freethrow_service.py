@@ -1,9 +1,7 @@
-import re
 import os
-from datetime import datetime
 from src.logging.app_logger import AppLogger
-from src.api.request_utils import RequestUtils
 from src.service.file_service import FileService
+from src.service.utility_service import UtilityService
 
 class FreethrowService(object):
     def __init__(self, config):
@@ -11,11 +9,7 @@ class FreethrowService(object):
         self.output_dir = config.get("output.data.dir")
         self.combined_data_file = config.get("combined.data.file")
         self.combined_data_dir = config.get("combined.data.dir")
-        #self.boxscore_data_dir = config.get("boxscore.data.dir")
-        #self.boxscore_data_file = config.get("boxscore.data.file")
-        #self.boxscore_data_path = os.path.join(self.output_dir, "boxscore")
-        #self.team_id = config.get("team.id")
-        self.team_ids = [int(team_id.strip()) for team_id in config.get("team.ids").split(",")]
+        self.team_ids = UtilityService.get_team_ids(config)
 
     def analyze_close_game_ft_percentages(self, win_or_loss):
         for teamId in self.team_ids:
@@ -34,10 +28,6 @@ class FreethrowService(object):
                 wins = self.get_wins(boxscore_list, teamId)
                 if len(wins) > 0:
                     filtered_boxscore_list = self.filter_wins_by_margin(wins, 5, "less")
-            
-            # for bs in filtered_boxscore_list:
-            #     self.logger.info(str(bs["winningTeam"]))
-            #     self.logger.info(str(bs["losingTeam"]))
 
             self.freethrow_analyis(filtered_boxscore_list, teamId)
     
@@ -76,37 +66,3 @@ class FreethrowService(object):
             print(data["game_date"] + " " + winningTeam + " "  + str(winningTeamPts) + " "  + losingTeam + " "  + str(losingTeamPts))
             print(data["game_date"] + " " + winningTeam + " FT-FTA: " + str(winningTeamFTs) + "-" + str(winningTeamFTAs))
             print(data["game_date"] + " " + losingTeam + " FT-FTA: " + str(losingTeamFTs) + "-" + str(losingTeamFTAs))
-            #self.logger.info(str(bs))
-            # winningTeamId = data["winningTeamId"]
-            # losingTeamId = data["losingTeamId"]
-            # game_date = data["game_date"]
-            # #home_team = bs["homeTeam"]["team"]
-            # winningTeam = data["outcome"]["winningTeam"]
-            # #home_team_pts = str(bs["homeTeam"]["PTS"])
-            # homeTeam_ft = bs["homeTeam"]["FT"]
-            # homeTeam_fta = bs["homeTeam"]["FTA"]
-            # homeTeam_assists = bs["homeTeam"]["AST"]
-            # homeTeam_turnovers = bs["homeTeam"]["TO"]
-
-            # away_team = bs["awayTeam"]["team"]
-            # away_team_pts = str(bs["awayTeam"]["PTS"])
-            # awayTeam_ft = bs["awayTeam"]["FT"]
-            # awayTeam_fta = bs["awayTeam"]["FTA"]
-            # awayTeam_assists = bs["awayTeam"]["AST"]
-            # awayTeam_turnovers = bs["awayTeam"]["TO"]
-
-            # pt_diff = str(abs(bs["awayTeam"]["PTS"] - bs["homeTeam"]["PTS"]))
-
-            # print(game_date + " "  + away_team + " at "  + home_team + ": Final Score: " + home_team_pts + "-" + away_team_pts)
-
-
-            # print(game_date + " " + home_team + " FT-FTA: " + str(homeTeam_ft) + "-" + str(homeTeam_fta))
-            # print(game_date + " " + away_team + " FT-FTA: " + str(awayTeam_ft) + "-" + str(awayTeam_fta))
-
-            #print(game_date + " " + home_team + " Assist/Turnover ratio: " + str(homeTeam_assists) + "/" + str(homeTeam_turnovers))
-            #print(game_date + " " + away_team + " Assist/Turnover ratio: " + str(awayTeam_assists) + "/" + str(awayTeam_turnovers))
-
-
-
-
-

@@ -6,6 +6,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 from src.logging.app_logger import AppLogger
 from src.api.request_utils import RequestUtils
+from src.service.utility_service import UtilityService
 from src.service.file_service import FileService
 
 class ModelCoaching(object):
@@ -17,7 +18,7 @@ class ModelCoaching(object):
         metadata_file = config.get("metadata.file")
         self.metadata_file_path = os.path.join(self.output_dir, metadata_file)
 
-        self.seasons = [season.strip() for season in config.get("seasons").split(",")]
+        self.seasons = UtilityService.get_seasons()
         self.team_id = config.get("team.id")
 
         # use the box score data to get home/away teams

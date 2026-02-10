@@ -3,18 +3,19 @@ import sys
 from bs4 import BeautifulSoup
 from src.logging.app_logger import AppLogger
 from src.service.file_service import FileService
+from src.service.utility_service import UtilityService
 
 class BoxscoreConsumerService(object):
-    def __init__(self, config, team_ids):
+    def __init__(self, config):
         self.logger = AppLogger.get_logger()
         self.config = config
-        self.output_dir = config.get("output.data.dir")
-        self.metadata_file = config.get("metadata.file")
-        self.seasons = [season.strip() for season in config.get("seasons").split(",")]
-        self.team_ids = team_ids
-        self.boxscore_data_file = config.get("boxscore.data.file")
-        self.boxscore_data_dir = config.get("boxscore.data.dir")
-
+        self.output_dir = UtilityService.get_output_dir()
+        self.scrape_data_dir = UtilityService.get_scrape_data_dir()
+        self.metadata_file = UtilityService.get_metadata_file()
+        self.seasons = UtilityService.get_seasons()
+        self.team_ids = UtilityService.get_team_ids()
+        self.boxscore_data_file = UtilityService.get_boxscore_data_file()
+        self.boxscore_data_dir = UtilityService.get_boxscore_data_dir()
 
     def collect_boxscore_data(self):
         do_boxscore = self.config.get("do.boxscore")
@@ -27,7 +28,8 @@ class BoxscoreConsumerService(object):
             os.makedirs(boxscore_file_path, exist_ok=True)
             FileService.delete_all_files_in_directory(boxscore_file_path)
 
-            metadata_file_path = os.path.join(self.output_dir, str(teamId), self.metadata_file)
+            metadata_file_path = os.path.join(self.output_dir, str(teamId), self.scrape_data_dir, self.metadata_file)
+
             games_list = FileService.read_file(metadata_file_path)
             
             for game in games_list:
