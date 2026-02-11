@@ -33,7 +33,7 @@ class QuarterService(object):
                 #    for boxscore in v:
                 #        self.logger.info(k + " -> " + boxscore)
 
-    def count_wins_by_individual_quarter(self, teamId:int, data_list):
+    def count_wins_by_individual_quarter(self, teamId:int, data_list, debug="N"):
 
         if data_list is None or len(data_list) == 0:
             return None
@@ -43,11 +43,7 @@ class QuarterService(object):
         q2_wins = 0
         q3_wins = 0
         q4_wins = 0
-        #q1_boxscore_url_list = []
-        #q2_boxscore_url_list = []
-        #q3_boxscore_url_list = []
-        #q4_boxscore_url_list = []
-        
+
         for data in data_list:
             games_played += 1
             winningTeamId = data["winningTeamId"]
@@ -72,32 +68,33 @@ class QuarterService(object):
                 q3_wins = q3_wins+1 if q3["q3_away_team_score"] >= q3["q3_home_team_score"] else q3_wins
                 q4_wins = q4_wins+1 if q4["q4_away_team_score"] >= q4["q4_home_team_score"] else q4_wins
 
-            if teamId == homeTeamId:
-                if q1["q1_home_team_score"] >= q1["q1_away_team_score"]:
-                    #pass
-                    self.logger.info("Q1 " + homeTeam + " " + str(q1["q1_home_team_score"]) + ", " + awayTeam + " " + str(q1["q1_away_team_score"]))
-                if q2["q2_home_team_score"] >= q2["q2_away_team_score"]:
-                    #pass
-                    self.logger.info("Q2 " + homeTeam + " " + str(q2["q2_home_team_score"]) + ", " + awayTeam + " " + str(q2["q2_away_team_score"]))
-                if q3["q3_home_team_score"] >= q3["q3_away_team_score"]:
-                    #pass
-                    self.logger.info("Q3 " + homeTeam + " " + str(q3["q3_home_team_score"]) + ", " + awayTeam + " " + str(q3["q3_away_team_score"]))
-                if q4["q4_home_team_score"] >= q4["q4_away_team_score"]:
-                    #pass
-                    self.logger.info("Q4 " + homeTeam + " " + str(q4["q4_home_team_score"]) + ", " + awayTeam + " " + str(q4["q4_away_team_score"]))
-            elif teamId == awayTeamId:
-                if q1["q1_away_team_score"] >= q1["q1_home_team_score"]:
-                    #pass
-                    self.logger.info("Q1 " + awayTeam + " " + str(q1["q1_away_team_score"]) + ", " + homeTeam + " " + str(q1["q1_home_team_score"]))
-                if q2["q2_away_team_score"] >= q2["q2_home_team_score"]:
-                    #pass
-                    self.logger.info("Q2 " + awayTeam + " " + str(q2["q2_away_team_score"]) + ", " + homeTeam + " " + str(q2["q2_home_team_score"]))
-                if q3["q3_away_team_score"] >= q3["q3_home_team_score"]:
-                    #pass
-                    self.logger.info("Q3 " + awayTeam + " " + str(q3["q3_away_team_score"]) + ", " + homeTeam + " " + str(q3["q3_home_team_score"]))
-                if q4["q4_away_team_score"] >= q4["q4_home_team_score"]:
-                    #pass
-                    self.logger.info("Q4 " + awayTeam + " " + str(q4["q4_away_team_score"]) + ", " + homeTeam + " " + str(q4["q4_home_team_score"]))
+            if debug == "Y":
+                if teamId == homeTeamId:
+                    if q1["q1_home_team_score"] >= q1["q1_away_team_score"]:
+                        #pass
+                        self.logger.info("Q1 " + homeTeam + " " + str(q1["q1_home_team_score"]) + ", " + awayTeam + " " + str(q1["q1_away_team_score"]))
+                    if q2["q2_home_team_score"] >= q2["q2_away_team_score"]:
+                        #pass
+                        self.logger.info("Q2 " + homeTeam + " " + str(q2["q2_home_team_score"]) + ", " + awayTeam + " " + str(q2["q2_away_team_score"]))
+                    if q3["q3_home_team_score"] >= q3["q3_away_team_score"]:
+                        #pass
+                        self.logger.info("Q3 " + homeTeam + " " + str(q3["q3_home_team_score"]) + ", " + awayTeam + " " + str(q3["q3_away_team_score"]))
+                    if q4["q4_home_team_score"] >= q4["q4_away_team_score"]:
+                        #pass
+                        self.logger.info("Q4 " + homeTeam + " " + str(q4["q4_home_team_score"]) + ", " + awayTeam + " " + str(q4["q4_away_team_score"]))
+                elif teamId == awayTeamId:
+                    if q1["q1_away_team_score"] >= q1["q1_home_team_score"]:
+                        #pass
+                        self.logger.info("Q1 " + awayTeam + " " + str(q1["q1_away_team_score"]) + ", " + homeTeam + " " + str(q1["q1_home_team_score"]))
+                    if q2["q2_away_team_score"] >= q2["q2_home_team_score"]:
+                        #pass
+                        self.logger.info("Q2 " + awayTeam + " " + str(q2["q2_away_team_score"]) + ", " + homeTeam + " " + str(q2["q2_home_team_score"]))
+                    if q3["q3_away_team_score"] >= q3["q3_home_team_score"]:
+                        #pass
+                        self.logger.info("Q3 " + awayTeam + " " + str(q3["q3_away_team_score"]) + ", " + homeTeam + " " + str(q3["q3_home_team_score"]))
+                    if q4["q4_away_team_score"] >= q4["q4_home_team_score"]:
+                        #pass
+                        self.logger.info("Q4 " + awayTeam + " " + str(q4["q4_away_team_score"]) + ", " + homeTeam + " " + str(q4["q4_home_team_score"]))
 
         q1_pct = round((q1_wins / games_played) * 100, 0)
         q2_pct = round((q2_wins / games_played) * 100, 0)
@@ -110,10 +107,6 @@ class QuarterService(object):
             "q2": {"wins": q2_wins, "pct": q2_pct},
             "q3": {"wins": q3_wins, "pct": q3_pct},
             "q4": {"wins": q4_wins, "pct": q4_pct},
-            #"q1_boxscores":  q1_boxscore_url_list,
-            #"q2_boxscores":  q2_boxscore_url_list,
-            #"q3_boxscores":  q3_boxscore_url_list,
-            #"q4_boxscores":  q4_boxscore_url_list,
         }    
 
 
