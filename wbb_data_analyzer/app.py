@@ -29,6 +29,7 @@ class App(object):
         #FreethrowService().analyze_close_game_ft_percentages("L")
         #FreethrowService().analyze_close_game_ft_percentages("W")
 
+        # analyze percentage wins by combinations of quarters in which a team outscores its opponent
         QuarterService().analysis()
 
 App.go()
