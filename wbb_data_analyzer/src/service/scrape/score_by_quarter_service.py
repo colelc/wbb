@@ -33,7 +33,7 @@ class ScoreByQuarterService(object):
 
         if homeTeam is None or awayTeam is None:
             self.logger.info(label + "cannot get quarter scores")
-            return None
+            return None, None
         
         # self.logger.info(str(homeTeam))
         # self.logger.info(str(awayTeam))
@@ -43,6 +43,27 @@ class ScoreByQuarterService(object):
 
         # self.logger.info(str(homeTeamQuarterScores))
         # self.logger.info(str(awayTeamQuarterScores))
+
+        homeTeamQtrs = {
+            "1": homeTeamQuarterScores[0], 
+            "2": homeTeamQuarterScores[1], 
+            "3": homeTeamQuarterScores[2], 
+            "4": homeTeamQuarterScores[3]
+        }
+
+        awayTeamQtrs = {
+            "1": awayTeamQuarterScores[0], 
+            "2": awayTeamQuarterScores[1], 
+            "3": awayTeamQuarterScores[2], 
+            "4": awayTeamQuarterScores[3]
+        }
+
+        quarter_scores = {
+            "q1": {"q1_home_team_score": homeTeamQtrs["1"], "q1_away_team_score": awayTeamQtrs["1"]},
+            "q2": {"q2_home_team_score": homeTeamQtrs["2"], "q2_away_team_score": awayTeamQtrs["2"]},
+            "q3": {"q3_home_team_score": homeTeamQtrs["3"], "q3_away_team_score": awayTeamQtrs["3"]},
+            "q4": {"q4_home_team_score": homeTeamQtrs["4"], "q4_away_team_score": awayTeamQtrs["4"]},
+        }
 
         homeTeamCumulative = {
             "1": homeTeamQuarterScores[0], 
@@ -69,7 +90,7 @@ class ScoreByQuarterService(object):
         # self.logger.info(str(awayTeamCumulative))
         # self.logger.info(str(end_quarter_scores))
 
-        return end_quarter_scores
+        return quarter_scores, end_quarter_scores
         
     def get_team_data(self, soup, game, label):
         for script in soup.find_all("script"):

@@ -85,12 +85,13 @@ class PlaybyplayConsumerService(object):
                     playbyplay_file = game["playbyplay_file"]
                     with open(playbyplay_file, "r", encoding="utf8") as file:
                         soup = BeautifulSoup(file, "html.parser")
-                        end_quarter_scores = self.score_by_quarter_service.get_quarter_scores(game, soup, label)
+                        quarter_scores, end_quarter_scores = self.score_by_quarter_service.get_quarter_scores(game, soup, label)
 
-                        if end_quarter_scores is None:
-                            self.logger.error(label + " cannot get end_quarter_scores")
+                        if quarter_scores is None or end_quarter_scores is None:
+                            self.logger.error(label + " cannot get end_quarter_scores or quarter_scores")
                             continue
 
+                        game["quarter_scores"] = quarter_scores
                         game["end_quarter_scores"] = end_quarter_scores
 
                         FileService.append(playbyplay_data_file_path, game)

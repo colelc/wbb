@@ -75,6 +75,37 @@ class CombineConsumerService(object):
                 "losingTeamPoints": boxscore["losingTeam"]["PTS"],
                 "losingTeamMargin": boxscore["losingTeam"]["margin"],
 
+                "quarter_scores": {
+                        "q1": {
+                        "q1_home_team_score": playbyplay["quarter_scores"]["q1"]["q1_home_team_score"],
+                        "q1_away_team_score": playbyplay["quarter_scores"]["q1"]["q1_away_team_score"],
+
+                        "q1_winning_team_score": playbyplay["quarter_scores"]["q1"]["q1_home_team_score"] if winningTeamId == homeTeamId else playbyplay["quarter_scores"]["q1"]["q1_away_team_score"],
+                        "q1_losing_team_score": playbyplay["quarter_scores"]["q1"]["q1_home_team_score"] if winningTeamId == awayTeamId else playbyplay["quarter_scores"]["q1"]["q1_away_team_score"],
+                        },
+                        "q2": {
+                        "q2_home_team_score": playbyplay["quarter_scores"]["q2"]["q2_home_team_score"],
+                        "q2_away_team_score": playbyplay["quarter_scores"]["q2"]["q2_away_team_score"],
+
+                        "q2_winning_team_score": playbyplay["quarter_scores"]["q2"]["q2_home_team_score"] if winningTeamId == homeTeamId else playbyplay["quarter_scores"]["q2"]["q2_away_team_score"],
+                        "q2_losing_team_score": playbyplay["quarter_scores"]["q2"]["q2_home_team_score"] if winningTeamId == awayTeamId else playbyplay["quarter_scores"]["q2"]["q2_away_team_score"],
+                        },
+                        "q3": {
+                        "q3_home_team_score": playbyplay["quarter_scores"]["q3"]["q3_home_team_score"],
+                        "q3_away_team_score": playbyplay["quarter_scores"]["q3"]["q3_away_team_score"],
+
+                        "q3_winning_team_score": playbyplay["quarter_scores"]["q3"]["q3_home_team_score"] if winningTeamId == homeTeamId else playbyplay["quarter_scores"]["q3"]["q3_away_team_score"],
+                        "q3_losing_team_score": playbyplay["quarter_scores"]["q3"]["q3_home_team_score"] if winningTeamId == awayTeamId else playbyplay["quarter_scores"]["q3"]["q3_away_team_score"],
+                        },
+                        "q4": {
+                        "q4_home_team_score": playbyplay["quarter_scores"]["q4"]["q4_home_team_score"],
+                        "q4_away_team_score": playbyplay["quarter_scores"]["q4"]["q4_away_team_score"],
+
+                        "q4_winning_team_score": playbyplay["quarter_scores"]["q4"]["q4_home_team_score"] if winningTeamId == homeTeamId else playbyplay["quarter_scores"]["q4"]["q4_away_team_score"],
+                        "q4_losing_team_score": playbyplay["quarter_scores"]["q4"]["q4_home_team_score"] if winningTeamId == awayTeamId else playbyplay["quarter_scores"]["q4"]["q4_away_team_score"],
+                        },
+                }, 
+
                 "end_quarter_scores": {
                         "q1": {
                         "q1_home_team_score": playbyplay["end_quarter_scores"]["q1"]["q1_home_team_score"],
@@ -104,7 +135,7 @@ class CombineConsumerService(object):
                         "q4_winning_team_score": playbyplay["end_quarter_scores"]["q4"]["q4_home_team_score"] if winningTeamId == homeTeamId else playbyplay["end_quarter_scores"]["q4"]["q4_away_team_score"],
                         "q4_losing_team_score": playbyplay["end_quarter_scores"]["q4"]["q4_home_team_score"] if winningTeamId == awayTeamId else playbyplay["end_quarter_scores"]["q4"]["q4_away_team_score"],
                         },
-                }, # if playbyplay["available"] == "Y" else {},
+                }, 
             },
             "winningTeamStats": {
                 "teamId": winningTeamId,

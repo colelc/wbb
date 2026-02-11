@@ -4,7 +4,7 @@ from src.service.file_service import FileService
 from src.service.utility_service import UtilityService
 
 class FreethrowService(object):
-    def __init__(self, config):
+    def __init__(self):
         self.logger = AppLogger.get_logger()
         self.output_dir = UtilityService.get_output_dir()
         self.combined_data_file = UtilityService.get_combined_data_file()
