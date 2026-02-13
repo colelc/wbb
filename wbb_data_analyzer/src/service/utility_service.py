@@ -19,6 +19,10 @@ class UtilityService(object):
         return [season.strip() for season in UtilityService.config.get("seasons").split(",")]
     
     @staticmethod
+    def get_head_to_head_teams():
+        return [int(team_id.strip()) for team_id in UtilityService.config.get("head.to.head").split(",")]
+    
+    @staticmethod
     def get_output_dir():
         return UtilityService.config.get("output.data.dir")
     

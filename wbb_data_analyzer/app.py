@@ -5,6 +5,7 @@ from src.model.model_coaching import ModelCoaching
 from src.service.scrape.scraper import Scraper
 from src.service.freethrow_service import FreethrowService
 from src.service.quarter_service import QuarterService
+from src.service.win_service import WinService
 from src.service.file_service import FileService
 from src.service.utility_service import UtilityService
 
@@ -30,6 +31,8 @@ class App(object):
         #FreethrowService().analyze_close_game_ft_percentages("W")
 
         # analyze percentage wins by combinations of quarters in which a team outscores its opponent
-        QuarterService().analysis()
+        #QuarterService().analysis()
+
+        WinService().analysis()
 
 App.go()
