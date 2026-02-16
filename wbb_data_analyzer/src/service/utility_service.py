@@ -11,6 +11,14 @@ class UtilityService(object):
         UtilityService.config = config
 
     @staticmethod
+    def get_duke_team_id():
+        return int(UtilityService.config.get("duke.team.id"))
+    
+    @staticmethod
+    def get_unc_team_id():
+        return int(UtilityService.config.get("unc.team.id"))
+
+    @staticmethod
     def get_team_ids():
         return  [int(team_id.strip()) for team_id in UtilityService.config.get("team.ids").split(",")]
     

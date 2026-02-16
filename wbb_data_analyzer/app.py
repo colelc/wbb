@@ -33,6 +33,8 @@ class App(object):
         # analyze percentage wins by combinations of quarters in which a team outscores its opponent
         #QuarterService().analysis()
 
-        WinService().analysis()
+        #WinService().head_to_head_scores() 
+        #WinService().losses()
+        WinService().duke_unc()
 
 App.go()
